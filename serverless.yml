@@ -1,0 +1,37 @@
+service: encodrive-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  environment:
+    USERS_TABLE: EncodriveUsers
+    API_KEY_SECRET: ${env:API_KEY_SECRET}
+    GMAIL_USER: ${env:GMAIL_USER}
+    GMAIL_PASS: ${env:GMAIL_PASS}
+
+functions:
+  api:
+    handler: src/handler.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+          cors: true
+
+plugins:
+  - serverless-offline
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Users
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

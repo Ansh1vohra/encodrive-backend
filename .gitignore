@@ -1,0 +1,4 @@
+.serverless
+.env
+node_modules
+undefined
