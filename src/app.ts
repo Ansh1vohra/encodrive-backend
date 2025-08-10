@@ -20,7 +20,7 @@ app.get('/', (_, res) => {
 });
 
 app.use((req, res, next) => {
-  if (req.is('application/json') && Buffer.isBuffer(req.body)) {
+  if (req.is('application/json') && Buffer.isBuffer(req.body) && req.body.length > 0) {
     try {
       req.body = JSON.parse(req.body.toString('utf8'));
     } catch (err) {
@@ -29,6 +29,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+
 
 app.use('/api/user', userRoutes);
 

@@ -6,9 +6,11 @@ provider:
   region: ap-south-1
   environment:
     USERS_TABLE: EncodriveUsers
+    FILES_TABLE: EncodriveFiles
     API_KEY_SECRET: ${env:API_KEY_SECRET}
     GMAIL_USER: ${env:GMAIL_USER}
     GMAIL_PASS: ${env:GMAIL_PASS}
+    AWS_REGION: ap-south-1
 
 functions:
   api:

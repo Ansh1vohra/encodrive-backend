@@ -43,3 +43,14 @@ export const getUserByEmail = async (email: string) => {
     apiKey: decryptAPIKey(user.Item.apiKey),
   };
 };
+
+export const findUserByApiKey = async (apiKey: string) => {
+  const user = await docClient.get({
+    TableName: USERS_TABLE,
+    Key: { apiKey },
+  }).promise();
+
+  if (!user.Item) return null;
+
+  return user.Item;
+};
