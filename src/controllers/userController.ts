@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { OAuth2Client } from "google-auth-library";
 import { findOrCreateUser, getUserByEmail } from '../services/userService';
 import { sendOTP } from '../services/otpService';
 import { verifyOTP as checkOTP } from '../utils/otpStore';
@@ -6,6 +7,7 @@ import { generateToken } from '../services/jwtService';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const signIn = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -23,7 +25,43 @@ export const signIn = async (req: Request, res: Response) => {
   }
 };
 
+export const googleSignIn = async (req: Request, res: Response) => {
+  const { idToken } = req.body;
 
+  if (!idToken) {
+    return res.status(400).json({ error: "Missing Google ID token" });
+  }
+
+  try {
+    // Verify Google ID token
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email) {
+      return res.status(400).json({ error: "Invalid Google token" });
+    }
+
+    const email = payload.email;
+
+    // Ensure user exists in DB
+    const user = await findOrCreateUser(email);
+
+    // Generate your JWT
+    const token = generateToken(email);
+
+    return res.status(200).json({
+      message: "Signed in with Google",
+      token,
+      user,
+    });
+  } catch (err) {
+    console.error("Google Sign-In error:", err);
+    return res.status(500).json({ error: "Google authentication failed" });
+  }
+};
 
 export const verifyOTP = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
