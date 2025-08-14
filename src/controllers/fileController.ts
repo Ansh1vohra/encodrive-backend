@@ -3,7 +3,7 @@ import { findUserByApiKey } from "../services/userService";
 import { saveFileMetadata } from "../services/fileService";
 import { s3 } from "../utils/s3";
 
-export const uploadFileController = async (req: Request, res: Response) => {
+export const generateUploadUrl = async (req: Request, res: Response) => {
   const { apiKey, fileName, fileType, fileSize } = req.body;
 
   if (!apiKey || !fileName || !fileType || !fileSize) {

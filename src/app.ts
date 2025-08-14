@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/user';
+import fileRoutes from "./routes/file";
 
 dotenv.config();
 
@@ -32,5 +33,7 @@ app.use((req, res, next) => {
 
 
 app.use('/api/user', userRoutes);
+app.use('/api/file',fileRoutes);
+
 
 export default app;

@@ -24,6 +24,7 @@ export const signIn = async (req: Request, res: Response) => {
 };
 
 
+
 export const verifyOTP = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
