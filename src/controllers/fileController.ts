@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { findUserByApiKey } from "../services/userService";
-import { saveFileMetadata } from "../services/fileService";
+import { saveFileMetadata,getFileByUrl } from "../services/fileService";
 import { s3 } from "../utils/s3";
 
 export const generateUploadUrl = async (req: Request, res: Response) => {
@@ -35,4 +35,48 @@ export const generateUploadUrl = async (req: Request, res: Response) => {
   });
 
   return res.json({ uploadURL, s3Url });
+};
+
+// controllers/fileController.ts
+export const getFileMetadata = async (req: Request, res: Response) => {
+  try {
+    const { apiKey, fileUrl } = req.body;
+
+    if (!apiKey || !fileUrl) {
+      return res.status(400).json({ error: "Missing required fields: apiKey and fileUrl" });
+    }
+
+    // Validate API key
+    const user = await findUserByApiKey(apiKey);
+    if (!user) {
+      return res.status(401).json({ error: "Invalid API key" });
+    }
+
+    // Get file metadata
+    const fileMetadata = await getFileByUrl(fileUrl); // or getFileByUrlScan
+    
+    if (!fileMetadata) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    // Optional: Verify the user owns this file
+    if (fileMetadata.userEmail !== user.email) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Return the metadata (excluding sensitive fields if any)
+    const { fileId, fileName, fileType, fileSize, uploadedAt, userEmail } = fileMetadata;
+    res.json({
+      fileId,
+      fileName,
+      fileType,
+      fileSize,
+      uploadedAt,
+      userEmail
+    });
+
+  } catch (error) {
+    console.error('Error in getFileMetadata:', error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };

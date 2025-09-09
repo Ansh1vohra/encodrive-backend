@@ -45,12 +45,45 @@ export const getUserByEmail = async (email: string) => {
 };
 
 export const findUserByApiKey = async (apiKey: string) => {
-  const user = await docClient.get({
-    TableName: USERS_TABLE,
-    Key: { apiKey },
-  }).promise();
+  try {
+    console.log('Searching for user with API key:', apiKey);
+    
+    // Scan ALL users from the database
+    const result = await docClient.scan({
+      TableName: USERS_TABLE,
+    }).promise();
 
-  if (!user.Item) return null;
+    console.log('Total users in database:', result.Items?.length || 0);
 
-  return user.Item;
+    if (!result.Items || result.Items.length === 0) {
+      console.log('No users found in database');
+      return null;
+    }
+
+    // Iterate through all users and decrypt their API keys
+    for (const user of result.Items) {
+      try {
+        if (user.apiKey) {
+          // Decrypt the stored API key
+          const decryptedStoredKey = decryptAPIKey(user.apiKey);
+          
+          // Compare with the provided API key
+          if (decryptedStoredKey === apiKey) {
+            console.log('User found:', user.email);
+            return user;
+          }
+        }
+      } catch (decryptError) {
+        console.warn(`Failed to decrypt API key for user ${user.email}:`, decryptError);
+        // Continue checking other users
+      }
+    }
+
+    console.log('No user found with matching API key');
+    return null;
+
+  } catch (error) {
+    console.error('Error in findUserByApiKey:', error);
+    throw error;
+  }
 };
