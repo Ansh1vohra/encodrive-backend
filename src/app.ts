@@ -69,7 +69,6 @@ function isBase64(str: string): boolean {
   }
 }
 
-// ... rest of your app configuration
 app.get('/health', (_: Request, res: Response) => {
   res.status(200).json({ status: 'OK' });
 });
