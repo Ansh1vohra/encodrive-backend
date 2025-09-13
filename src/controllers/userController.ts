@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { OAuth2Client } from "google-auth-library";
 import { findOrCreateUser, getUserByEmail } from '../services/userService';
+import {getFilesByUserEmail} from '../services/fileService'
 import { sendOTP } from '../services/otpService';
 import { verifyOTP as checkOTP } from '../utils/otpStore';
 import { generateToken } from '../services/jwtService';
@@ -101,5 +102,28 @@ export const getUserDetails = async (req: Request, res: Response) => {
     res.json({ user });
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+export const getUserFiles = async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
+    const files = await getFilesByUserEmail(decoded.email);
+
+    if (files.length === 0) {
+      return res.status(404).json({ error: 'No files found for this user' });
+    }
+
+    return res.json({ files });
+  } catch (error) {
+    return res.status(401).json({ error: 'Invalid token' });
   }
 };

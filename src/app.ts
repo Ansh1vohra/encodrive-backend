@@ -11,8 +11,14 @@ const app = express();
 // 1. Apply CORS first
 app.use(cors());
 
-// 3. API Gateway Lambda Proxy Compatibility Middleware
+// 2. Only parse JSON for requests that have JSON content type AND are not GET/HEAD/DELETE
 app.use((req: Request, res: Response, next: NextFunction) => {
+  // Skip JSON parsing for GET, HEAD, DELETE requests since they typically don't have bodies
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'DELETE') {
+    return next();
+  }
+
+  // Only parse if content-type is application/json
   if (req.headers['content-type'] === 'application/json') {
     let data = '';
     
@@ -23,6 +29,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     
     req.on('end', () => {
       try {
+        // Handle empty body
+        if (!data.trim()) {
+          req.body = {};
+          return next();
+        }
+
         // Handle API Gateway's base64 encoding
         if (data.trim().startsWith('{') && data.trim().endsWith('}')) {
           // Regular JSON request
@@ -49,21 +61,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       next();
     });
   } else {
-    // For non-JSON requests, use built-in parsers
-    express.json()(req, res, next);
+    // For non-JSON requests, move to next middleware
+    next();
   }
 });
 
 // Helper function to check if a string is base64 encoded
 function isBase64(str: string): boolean {
   try {
-    // In Node.js, use Buffer for base64 checking
-    if (typeof window === 'undefined') {
-      return Buffer.from(str, 'base64').toString('base64') === str;
-    } else {
-      // For browser environment
-      return btoa(atob(str)) === str;
-    }
+    return Buffer.from(str, 'base64').toString('base64') === str;
   } catch (err) {
     return false;
   }

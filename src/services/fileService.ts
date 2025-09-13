@@ -1,11 +1,10 @@
-// services/fileService.ts
 import { v4 as uuidv4 } from 'uuid';
 import { docClient } from "../utils/dynamoClient";
 
 const FILES_TABLE = process.env.FILES_TABLE || "EncodriveFiles";
 
 export interface EncodriveFile {
-  fileId: string; // ← ADD THIS (required for your table structure)
+  fileId: string; 
   userEmail: string;
   fileName: string;
   fileType: string;
@@ -18,7 +17,7 @@ export const saveFileMetadata = async (fileData: Omit<EncodriveFile, 'fileId'>) 
   const fileId = uuidv4(); // Generate unique file ID
 
   const file: EncodriveFile = {
-    fileId, // ← ADD the fileId
+    fileId, 
     ...fileData
   };
 
