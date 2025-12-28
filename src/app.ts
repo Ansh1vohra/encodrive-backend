@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from "./routes/user";
 import fileRoutes from "./routes/file";
+import paymentRoutes from "./routes/payment";
 
 dotenv.config();
 
@@ -81,5 +82,6 @@ app.get('/health', (_: Request, res: Response) => {
 
 app.use('/api/user', userRoutes);
 app.use('/api/file', fileRoutes);
+app.use('/api/payment', paymentRoutes);
 
 export default app;

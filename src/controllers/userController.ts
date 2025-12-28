@@ -5,48 +5,12 @@ import {getFilesByUserEmail} from '../services/fileService'
 import { sendOTP } from '../services/otpService';
 import { verifyOTP as checkOTP } from '../utils/otpStore';
 import { generateToken } from '../services/jwtService';
-import { authenticateWithLDAP } from '../services/ldapService';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export const ldapSignIn = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    const ldapUser = await authenticateWithLDAP(email, password);
-    
-    if (!ldapUser) {
-      return res.status(503).json({ 
-        error: 'LDAP authentication not available',
-        message: 'LDAP is not configured. Please contact the administrator or use another authentication method.' 
-      });
-    }
-
-    // Create/update local user record
-    const user = await findOrCreateUser(email);
-    
-    // Generate JWT token
-    const token = generateToken(email);
-
-    return res.status(200).json({ 
-      message: 'LDAP authentication successful',
-      token,
-      user
-    });
-  } catch (err) {
-    console.error('LDAP signin error:', err);
-    return res.status(503).json({ 
-      error: 'LDAP authentication service unavailable',
-      details: (err instanceof Error) ? err.message : 'Unknown error'
-    });
-  }
-};
+// LDAP signin removed. Use standard signin/OTP/Google flows.
 
 export const signIn = async (req: Request, res: Response) => {
   const { email } = req.body;
